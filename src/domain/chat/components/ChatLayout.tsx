@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, Send, Settings, Paperclip, MessageSquare, Image as ImageIcon, LogOut, Trash2 } from "lucide-react";
+import { Search, Plus, Send, Settings, Paperclip, MessageSquare, Image as ImageIcon, LogOut, Trash2, ArrowLeft, Menu } from "lucide-react";
 
 export function ChatLayout({ session }: { session?: any }) {
   const [isTranslationOn, setIsTranslationOn] = useState(true);
@@ -54,16 +54,8 @@ export function ChatLayout({ session }: { session?: any }) {
         setChannels(data);
         setActiveChannel(data[0]);
       } else {
-        // Create default channel if none
-        supabase.from('channels').insert({ name: 'General Announcements', created_by: session.user.id }).select().single().then(async ({data: newChan, error}) => {
-           if(newChan) {
-             setChannels([newChan]);
-             setActiveChannel(newChan);
-           } else if (error) {
-             console.error("Auto-create error:", error);
-             alert("Auto-create error: " + error.message);
-           }
-        })
+        setChannels([]);
+        setActiveChannel(null);
       }
     });
   }, [session]);
@@ -206,9 +198,9 @@ export function ChatLayout({ session }: { session?: any }) {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden font-sans">
+    <div className="flex h-[100dvh] bg-zinc-50 dark:bg-zinc-950 font-sans text-foreground overflow-hidden">
       {/* Sidebar */}
-      <div className="w-80 flex-shrink-0 border-r bg-muted/20 flex flex-col">
+      <div className={`${activeChannel ? 'hidden md:flex' : 'flex'} w-full md:w-64 bg-zinc-100/50 dark:bg-zinc-900 border-r flex-col justify-between shadow-sm z-20`}>
         <div className="p-4 flex items-center justify-between border-b">
           <div className="flex items-center gap-2 font-bold text-xl tracking-tight text-primary">
             <MessageSquare className="w-6 h-6 text-blue-600" />
@@ -295,41 +287,53 @@ export function ChatLayout({ session }: { session?: any }) {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-zinc-950">
-        <header className="h-16 px-6 border-b flex items-center justify-between shadow-sm z-10">
-          <div className="flex flex-col">
-            <h2 className="font-bold text-lg"># {activeChannel?.name || 'Loading...'}</h2>
-            <p className="text-xs text-muted-foreground">Team Chat</p>
-          </div>
-          
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">AI Model:</span>
-              <Select value={aiModel} onValueChange={(val) => val && setAiModel(val)}>
-                <SelectTrigger className="h-8 w-[140px] text-xs">
-                  <SelectValue placeholder="Select Model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="deepseek">DeepSeek (Fast/Cost)</SelectItem>
-                  <SelectItem value="gpt">GPT-4o-mini (Quality)</SelectItem>
-                </SelectContent>
-              </Select>
+      {activeChannel ? (
+        <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-zinc-950">
+          <header className="h-14 md:h-16 px-3 md:px-6 border-b flex items-center justify-between shadow-sm z-10">
+            <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="md:hidden shrink-0 -ml-1" 
+                onClick={() => setActiveChannel(null)}
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div className="flex flex-col min-w-0">
+                <h2 className="font-bold text-base md:text-lg flex items-center gap-1 truncate">
+                  <span className="text-muted-foreground">#</span> {activeChannel.name}
+                </h2>
+                <p className="text-[10px] md:text-xs text-muted-foreground truncate hidden md:block">Team Chat</p>
+              </div>
             </div>
+            
+            <div className="flex items-center gap-3 md:gap-6 shrink-0 ml-2">
+              <div className="hidden md:flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">AI Model:</span>
+                <Select value={aiModel} onValueChange={(val) => val && setAiModel(val)}>
+                  <SelectTrigger className="h-8 w-[140px] text-xs">
+                    <SelectValue placeholder="Select Model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="deepseek">DeepSeek V3 (Fast)</SelectItem>
+                    <SelectItem value="gpt-4o">GPT-4o (Premium)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <Separator orientation="vertical" className="h-6" />
-
-            <div className="flex items-center gap-2">
-              <Switch 
-                id="translation-mode" 
-                checked={isTranslationOn}
-                onCheckedChange={setIsTranslationOn}
-              />
-              <label htmlFor="translation-mode" className="text-sm font-medium cursor-pointer">
-                Auto-Translate
-              </label>
+              <div className="flex items-center gap-1.5">
+                <Switch 
+                  id="auto-translate" 
+                  checked={isTranslationOn}
+                  onCheckedChange={setIsTranslationOn}
+                  className="scale-75 md:scale-100"
+                />
+                <label htmlFor="auto-translate" className="text-[10px] md:text-xs font-medium cursor-pointer text-muted-foreground">
+                  Auto-Translate
+                </label>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
         {/* Messages */}
         <ScrollArea className="flex-1 p-6">
@@ -386,22 +390,14 @@ export function ChatLayout({ session }: { session?: any }) {
           </div>
         </ScrollArea>
 
-        {/* Input Area */}
-        <div className="p-4 bg-background border-t">
-          <div className="max-w-4xl mx-auto relative flex items-end gap-2 bg-muted/20 p-2 rounded-xl border shadow-sm focus-within:ring-1 focus-within:ring-primary/50 transition-all">
-            <div className="flex items-center gap-1 pb-1 px-1">
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-muted-foreground">
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-muted-foreground">
-                <ImageIcon className="h-4 w-4" />
-              </Button>
-            </div>
+        {/* Message Input */}
+        <div className="p-3 md:p-4 bg-background border-t">
+          <div className="max-w-4xl mx-auto relative flex items-end gap-1.5 md:gap-2 bg-muted/50 rounded-2xl border p-1.5 md:p-2 focus-within:ring-1 focus-within:ring-primary/50 transition-all">
+            <Button variant="ghost" size="icon" className="h-8 w-8 md:h-10 md:w-10 shrink-0 rounded-full text-muted-foreground hover:bg-white">
+              <Paperclip className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
             
-            <textarea
-              className="flex-1 max-h-32 min-h-[40px] bg-transparent border-0 focus:ring-0 resize-none py-2.5 text-sm outline-none"
-              placeholder="Type your message..."
-              rows={1}
+            <textarea 
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={(e) => {
@@ -410,21 +406,33 @@ export function ChatLayout({ session }: { session?: any }) {
                   handleSendMessage();
                 }
               }}
+              placeholder="Type your message..."
+              className="flex-1 max-h-32 min-h-[32px] md:min-h-[40px] bg-transparent resize-none outline-none py-1.5 md:py-2 text-[13px] md:text-sm"
+              rows={1}
             />
             
-            <div className="pb-1 pr-1">
-              <Button size="icon" onClick={handleSendMessage} className="rounded-full h-9 w-9 bg-blue-600 hover:bg-blue-700 shadow-md">
-                <Send className="h-4 w-4 text-white" />
-              </Button>
-            </div>
+            <Button 
+              onClick={handleSendMessage}
+              disabled={!message.trim()}
+              className="h-8 w-8 md:h-10 md:w-10 shrink-0 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm" 
+              size="icon"
+            >
+              <Send className="h-3.5 w-3.5 md:h-4 md:w-4 md:ml-0.5" />
+            </Button>
           </div>
-          <div className="text-center mt-2">
+          <div className="text-center mt-1.5 md:mt-2 hidden md:block">
             <p className="text-[10px] text-muted-foreground">
-              Auto-translating to others based on their language preferences using <span className="font-semibold text-primary">{aiModel === 'deepseek' ? 'DeepSeek' : 'GPT-4o-mini'}</span>.
+              Auto-translating to others based on their language preferences using <strong className="text-foreground">DeepSeek</strong>.
             </p>
           </div>
         </div>
-      </div>
+        </div>
+      ) : (
+        <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-zinc-50 dark:bg-zinc-950 text-muted-foreground">
+          <MessageSquare className="w-16 h-16 mb-4 text-muted-foreground/30" />
+          <p>좌측의 [+] 버튼을 눌러 새로운 채팅방을 만들어주세요.</p>
+        </div>
+      )}
     </div>
   );
 }
