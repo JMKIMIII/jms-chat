@@ -321,6 +321,28 @@ export function ChatLayout({ session }: { session?: any }) {
                 </Select>
               </div>
 
+              {/* Mobile Language Selector */}
+              <div className="flex md:hidden items-center">
+                <Select value={myLanguage} onValueChange={(val) => handleLanguageChange(val)}>
+                  <SelectTrigger className="h-7 w-[75px] text-[11px] bg-muted/30 border border-muted/50 px-2 focus:ring-0">
+                    <SelectValue placeholder="Lang" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ko">한국어</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="de">German</SelectItem>
+                    <SelectItem value="de-ch">Swiss DE</SelectItem>
+                    <SelectItem value="fr">French</SelectItem>
+                    <SelectItem value="no">Norsk</SelectItem>
+                    <SelectItem value="lb">Luxembg</SelectItem>
+                    <SelectItem value="nl">Dutch</SelectItem>
+                    <SelectItem value="it">Italian</SelectItem>
+                    <SelectItem value="es">Spanish</SelectItem>
+                    <SelectItem value="sv">Swedish</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex items-center gap-1.5">
                 <Switch 
                   id="auto-translate" 
