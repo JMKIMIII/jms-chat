@@ -303,7 +303,7 @@ export function ChatLayout({ session }: { session?: any }) {
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-muted-foreground">AI Model:</span>
-              <Select value={aiModel} onValueChange={setAiModel}>
+              <Select value={aiModel} onValueChange={(val) => val && setAiModel(val)}>
                 <SelectTrigger className="h-8 w-[140px] text-xs">
                   <SelectValue placeholder="Select Model" />
                 </SelectTrigger>
