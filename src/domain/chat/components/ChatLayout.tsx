@@ -155,7 +155,8 @@ export function ChatLayout({ session }: { session?: any }) {
     }
   };
 
-  const handleLanguageChange = async (val: string) => {
+  const handleLanguageChange = async (val: string | null) => {
+    if (!val) return;
     setMyLanguage(val);
     if (session?.user?.id) {
        await supabase.from('profiles').update({ preferred_language: val }).eq('id', session.user.id);
