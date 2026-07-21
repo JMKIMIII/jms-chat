@@ -52,7 +52,8 @@ export function ChatLayout({ session }: { session?: any }) {
     supabase.from('channels').select('*').order('created_at').then(({data}) => {
       if (data && data.length > 0) {
         setChannels(data);
-        setActiveChannel(data[0]);
+        // Do not auto-select channel so mobile users see the channel list first
+        setActiveChannel(null);
       } else {
         setChannels([]);
         setActiveChannel(null);
