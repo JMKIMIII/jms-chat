@@ -55,7 +55,7 @@ export function ChatLayout({ session }: { session?: any }) {
         setActiveChannel(data[0]);
       } else {
         // Create default channel if none
-        supabase.from('channels').insert({ name: 'General Announcements' }).select().single().then(({data: newChan, error}) => {
+        supabase.from('channels').insert({ name: 'General Announcements', created_by: session.user.id }).select().single().then(async ({data: newChan, error}) => {
            if(newChan) {
              setChannels([newChan]);
              setActiveChannel(newChan);
@@ -170,7 +170,7 @@ export function ChatLayout({ session }: { session?: any }) {
   const handleCreateChannel = async () => {
     const name = window.prompt("Enter new channel name (채팅방 이름 입력):");
     if (!name || !name.trim()) return;
-    const { data, error } = await supabase.from('channels').insert({ name: name.trim() }).select().single();
+    const { data, error } = await supabase.from('channels').insert({ name: name.trim(), created_by: session.user.id }).select().single();
     if (data) {
       setChannels(prev => [...prev, data]);
       setActiveChannel(data);
@@ -242,15 +242,17 @@ export function ChatLayout({ session }: { session?: any }) {
                 >
                   # {channel.name}
                 </button>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-600 transition-opacity" 
-                  onClick={(e) => handleDeleteChannel(channel.id, e)}
-                  title="채팅방 삭제"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
+                {channel.created_by === session?.user?.id && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-600 transition-opacity" 
+                    onClick={(e) => handleDeleteChannel(channel.id, e)}
+                    title="채팅방 삭제"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                )}
               </div>
             ))}
           </div>
